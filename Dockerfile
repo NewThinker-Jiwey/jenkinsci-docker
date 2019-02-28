@@ -76,6 +76,22 @@ RUN apt-get update && apt-get install -y docker-ce
 #RUN groupadd docker
 RUN gpasswd -a ${user} docker
 
+# Jiwey: to enable ssh access to the container, we need to expose the ssh port (22).
+# Also install net-tools to help check the net status and vim to edit text files.
+ARG ssh_port=22
+ARG user_passwd=jenkins123
+RUN apt-get update && apt-get install -y openssh-server
+RUN apt-get install -y net-tools
+RUN apt-get install -y vim
+RUN mkdir -p /var/run/sshd
+RUN mkdir -p JENKINS_HOME/.ssh
+# generate the ssh host key with ssh-keygen. "y" means yes to overwrite the existing key
+RUN echo -e 'y\n' | ssh-keygen -y -q -t rsa -b 2048 -f /etc/ssh/ssh_host_rsa_key -P '' -N ''
+COPY default-sshd_config /etc/ssh/sshd_config
+# set the passwd for user $user to enable the ssh access
+RUN echo ${user}:${user_passwd} | chpasswd
+EXPOSE ${ssh_port}
+
 # for main web interface:
 EXPOSE ${http_port}
 
