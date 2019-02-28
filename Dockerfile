@@ -92,6 +92,10 @@ COPY default-sshd_config /etc/ssh/sshd_config
 RUN echo ${user}:${user_passwd} | chpasswd
 EXPOSE ${ssh_port}
 
+# Jiwey: enable sudo for user $user
+RUN echo "${user} ALL=(ALL:ALL)  ALL" > /etc/sudoers.d/{user}
+
+
 # for main web interface:
 EXPOSE ${http_port}
 
