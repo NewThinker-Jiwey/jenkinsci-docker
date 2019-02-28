@@ -62,6 +62,20 @@ ENV JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental
 ENV JENKINS_INCREMENTALS_REPO_MIRROR=https://repo.jenkins-ci.org/incrementals
 RUN chown -R ${user} "$JENKINS_HOME" /usr/share/jenkins/ref
 
+# Jiwey: to use docker in jenkins pipelines, we need to install docker in the container.
+# How to deal with docker-in-docker? see: https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
+# The gist of the solution is: ```docker run -v /var/run/docker.sock:/var/run/docker.sock ...```
+RUN apt-get update && apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    software-properties-common
+RUN curl -fsSL https://download.docker.com/linux/$(. /etc/os-release;echo "$ID")/gpg | apt-key add -
+RUN apt-key fingerprint 0EBFCD88
+RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release;echo "$ID") $(lsb_release -cs) stable"
+RUN apt-get update && apt-get install -y docker-ce
+#RUN groupadd docker
+RUN gpasswd -a ${user} docker
+
 # for main web interface:
 EXPOSE ${http_port}
 
